@@ -8,9 +8,21 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
     - name: Build and push the image
-      run: | 
-        docker login --username rodeknopje --password ${{ secrets.GH_PAT }} ghcr.io
-        docker build . --tag ghcr.io/rodeknopje/tweakers-va-scraper
-        docker push ghcr.io/rodeknopje/tweakers-va-scraper
+      uses: actions/checkout@v3
+      run: docker login --username rodeknopje --password ${{ secrets.GH_PAT }} ghcr.io
+
+    - name: Build and push
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        platforms: linux/amd64,linux/arm64
+        push: true
+        tags: ghcr.io/rodeknopje/tweakers-va-scraper
