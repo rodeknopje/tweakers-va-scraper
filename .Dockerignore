@@ -1,6 +1,5 @@
 # Ignore node_modules
 node_modules
-
 # Ignore log files
 *.log
 
@@ -13,6 +12,8 @@ yarn-error.log*
 .DS_Store
 .vscode/
 .idea/
+.git
+.gitignore
 
 # Ignore Docker-specific files
 Dockerfile
