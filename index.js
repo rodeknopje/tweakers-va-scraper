@@ -1,21 +1,22 @@
 import * as cheerio from 'cheerio';
-import rp from 'request-promise';
 import dotenv from 'dotenv';
 import pushover from './pushover.js';
 
 dotenv.config();
 
 const URL = 'https://tweakers.net/aanbod/zoeken/';
-//3 minutes
+const QUERY = "table.listing > tbody > tr > td > p.title.ellipsis > a"
 const INTERVAL_TIME = 1000 * 60 * 3;
-const keywords = process.env.KEYWORDS.split(',');
+const KEYWORDS = process.env.KEYWORDS.split(',');
 let previouseLinks = [];
 
 const scrape = async () => {
     try {
-        const html = await rp(URL);
+        const response = await fetch(URL);
+        const html = await response.text();
         const $ = cheerio.load(html);
-        const adverts = $("table.listing > tbody > tr > td > p.title.ellipsis > a")
+
+        const adverts = $(QUERY)
 
         let links = []
 
@@ -25,10 +26,12 @@ const scrape = async () => {
             const title = $(element).text();
             const link  = $(element).attr('href');
 
-            if (keywords.some(keyword => title.toLowerCase().includes(keyword.toLowerCase()))) {
+            links.push(link);
+
+            if (KEYWORDS.some(keyword => title.toLowerCase().includes(keyword.toLowerCase()))) {
                 if (previouseLinks.includes(link)) {
                     console.log(`Found a match: ${title}, but already notified.`);
-                    return;
+                    continue;
                 }
                 console.log(`Found a match: ${title}`);
                 await pushover(process.env.PUSHOVER_TOKEN, process.env.PUSHOVER_USER, link);
@@ -40,7 +43,7 @@ const scrape = async () => {
     }
 }
 console.log('starting scraper');
-console.log('looking for: ', keywords.join(', '));
+console.log('looking for: ', KEYWORDS.join(', '));
 await scrape()
 setInterval(async () => await scrape(), INTERVAL_TIME)
 
